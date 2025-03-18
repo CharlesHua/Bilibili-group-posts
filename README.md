@@ -17,7 +17,7 @@
 ```bash
 git clone https://github.com/CharlesHua/Bilibili-group-posts.git
 ```
-或点击上方的绿色`code`按键，选择`Download Zip`.
+或点击上方的绿色`code`按键，选择`Download ZIP`.
 
 ### 2. 加载扩展
 1. 打开 Chrome 浏览器，进入 `chrome://extensions/`。
