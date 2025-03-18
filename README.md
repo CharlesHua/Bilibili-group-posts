@@ -17,6 +17,7 @@
 ```bash
 git clone https://github.com/CharlesHua/Bilibili-group-posts.git
 ```
+或点击上方的绿色`code`按键，选择`Download Zip`.
 
 ### 2. 加载扩展
 1. 打开 Chrome 浏览器，进入 `chrome://extensions/`。
@@ -27,7 +28,7 @@ git clone https://github.com/CharlesHua/Bilibili-group-posts.git
 1. 打开 Bilibili 网站并登录。
 2. 点击扩展图标，弹出分组管理页面，可以勾选哪些分组显示在动态页中。 
    注意，第一次关闭扩展图标的页面时，可能无法记录修改，请多试几次。
-3. 在 Bilibili 动态页(https://t.bilibili.com)，选择想要查看的分组tab，将显示该组的动态。显示动态较少时，需要手动向下翻动页面，触发加载。
+3. 在 Bilibili 动态页( https://t.bilibili.com )，选择想要查看的分组tab，将显示该组的动态。显示动态较少时，需要手动向下翻动页面，触发加载。
 
 ## 文件结构
 
