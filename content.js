@@ -39,19 +39,32 @@ function insertFollowGroupTabs() {
         return;
     }
 
-    let customNav = document.querySelector(".bili-custom-tabs");
-    if (!customNav) {
-        customNav = originalNav.cloneNode(false);
-        customNav.classList.add("bili-custom-tabs");
-        originalNav.insertAdjacentElement("afterend", customNav);
-    }
-    const customNavList = document.createElement("div");
-    customNavList.className = "bili-dyn-list-tabs__list";
-    customNav.appendChild(customNavList);
-
     chrome.storage.local.get(["tags", "groupStates"], (data) => {
         const tags = data.tags || [];
         const groupStates = data.groupStates || {};
+        const maxWidth = originalNav.offsetWidth;
+        let currentWidth = 0;
+        let lastCustomNav = originalNav;
+        let customNav = null;
+        let customNavList = null;
+
+        // 创建新的导航栏容器
+        function createNewCustomNav() {
+            customNav = document.createElement("div");
+            customNav.className = "bili-dyn-list-tabs bili-custom-tabs";
+            lastCustomNav.insertAdjacentElement("afterend", customNav);
+            lastCustomNav = customNav;
+
+            customNavList = document.createElement("div");
+            customNavList.className = "bili-dyn-list-tabs__list";
+            customNavList.style.display = "flex";
+            customNavList.style.flexWrap = "nowrap"; // 确保不换行
+            customNav.appendChild(customNavList);
+            currentWidth = 0; // 重置当前宽度
+        }
+
+        // 初始化第一个自定义导航栏
+        createNewCustomNav();
 
         tags.forEach((tag) => {
             const tagId = tag.tagid;
@@ -59,34 +72,42 @@ function insertFollowGroupTabs() {
             const isChecked = groupStates[tagId]?.checked ?? true;
             if (!isChecked) return;
 
+            // 创建 tab 元素
             const groupTab = document.createElement("div");
             groupTab.className = "bili-dyn-list-tabs__item";
             groupTab.innerText = tagName;
             groupTab.dataset.tagId = tagId;
+
+            // 先添加到 DOM 中，以便计算宽度
             customNavList.appendChild(groupTab);
+            const tabWidth = groupTab.offsetWidth;
+
+            // 如果当前宽度加上新 tab 的宽度超过最大宽度，则创建新的导航栏
+            if (currentWidth + tabWidth > maxWidth) {
+                customNavList.removeChild(groupTab); // 从当前导航栏移除
+                createNewCustomNav(); // 创建新的导航栏
+                customNavList.appendChild(groupTab); // 将 tab 添加到新的导航栏
+                currentWidth = tabWidth; // 重置当前宽度
+            } else {
+                currentWidth += tabWidth + 20; // 累加当前宽度, 20 为 tab 之间的间距
+            }
 
             // 绑定点击事件
             groupTab.addEventListener("click", () => {
-                // 保存当前选中的分组到 localStorage
                 localStorage.setItem("selectedGroupTab", tagId);
-
-                // 刷新页面
                 window.location.reload();
             });
         });
 
-        // 页面加载后，检查是否有需要切换的分组
+        // 处理选中的 tab
         const selectedGroupTab = localStorage.getItem("selectedGroupTab");
         if (selectedGroupTab) {
-            // 切换到对应的分组
             filterDynamicPosts(selectedGroupTab, true);
             document.querySelectorAll(".bili-dyn-list-tabs__item.active").forEach(el => el.classList.remove("active"));
             const activeTab = document.querySelector(`.bili-dyn-list-tabs__item[data-tag-id="${selectedGroupTab}"]`);
             if (activeTab) {
                 activeTab.classList.add("active");
             }
-
-            // 清除 localStorage 中的选中状态
             localStorage.removeItem("selectedGroupTab");
         }
     });
