@@ -5,75 +5,364 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>关注分组</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            width: 300px; 
-            padding: 10px; 
-            margin: 0; /* 确保 body 无默认边距 */
+        :root {
+            --page-width-compact: 340px;
+            --page-width-full: min(1100px, calc(100vw - 48px));
+            --page-width-settings: min(760px, calc(100vw - 48px));
+            --page-bg: #ffffff;
+            --border-color: #c7d0d9;
+            --border-color-strong: #9aa8b6;
+            --button-bg: #f6f8fa;
+            --button-bg-hover: #eef2f6;
+            --button-bg-disabled: #e8edf3;
+            --text-color: #1f2328;
+            --muted-color: #666;
+            --card-bg: #fbfcfd;
         }
-        .group { 
-            margin-bottom: 10px; 
+
+        body {
+            font-family: Arial, sans-serif;
+            width: var(--page-width-compact);
+            max-width: 100%;
+            padding: 10px;
+            margin: 0;
+            box-sizing: border-box;
+            background: var(--page-bg);
+            color: var(--text-color);
         }
+
+        body.full-page {
+            width: var(--page-width-full);
+            margin: 0 auto;
+            padding: 20px 24px 32px;
+        }
+
+        body.settings-page {
+            width: var(--page-width-settings);
+            margin: 0 auto;
+            padding: 20px 24px 32px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .icon-btn,
+        .view-toggle-btn,
+        .toolbar button,
+        .latest-action-trigger,
+        .latest-action-menu button,
+        .settings-actions button {
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 3px 8px;
+            cursor: pointer;
+            color: var(--text-color);
+            background: var(--button-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .icon-btn {
+            min-width: 32px;
+            padding: 3px 6px;
+            font-size: 16px;
+        }
+
+        .icon-btn:hover:not(:disabled),
+        .view-toggle-btn:hover:not(:disabled),
+        .toolbar button:hover:not(:disabled),
+        .latest-action-trigger:hover:not(:disabled),
+        .latest-action-menu button:hover:not(:disabled),
+        .settings-actions button:hover:not(:disabled) {
+            background: var(--button-bg-hover);
+        }
+
+        .toolbar button:disabled,
+        .latest-action-trigger:disabled {
+            color: var(--text-color);
+            background: var(--button-bg-disabled);
+            border-color: var(--border-color-strong);
+            opacity: 1;
+            cursor: default;
+            font-weight: 600;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .toolbar-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .group {
+            margin-bottom: 10px;
+        }
+
         .group-header {
             display: flex;
             align-items: center;
-            gap: 5px; /* 恢复合理间距 */
+            gap: 5px;
             padding: 4px 0;
+            flex-wrap: wrap;
         }
+
         .group-checkbox {
             margin: 0;
         }
+
         .toggle-collapse {
             background: none;
             border: none;
             cursor: pointer;
             padding: 0;
             font-size: 12px;
-            color: #666;
+            color: var(--muted-color);
         }
+
         .group-name {
             font-size: 14px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            flex: 1;
+            min-width: 0;
         }
+
+        .latest-action {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .latest-action-trigger {
+            min-width: 126px;
+        }
+
+        .latest-action-menu {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 120px;
+            padding: 6px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(31, 35, 40, 0.12);
+            z-index: 20;
+        }
+
+        .latest-action.open .latest-action-menu {
+            display: flex;
+        }
+
+        .latest-action-menu button {
+            text-align: left;
+        }
+
+        .last-fetch-time {
+            font-size: 12px;
+            color: var(--muted-color);
+            white-space: nowrap;
+        }
+
         .user-list {
             list-style: none;
             padding: 0;
             margin: 0;
-            display: none; /* 默认折叠 */
+            display: none;
         }
+
         .user-list[style*="block"] {
-            display: block; /* 展开时显示 */
+            display: block;
         }
-    
-        /* 新增：设置用户名和 MID 的字体大小 */
+
         .user-list li {
-            font-size: 14px; /* 用户名和 MID 的字体大小 */
-            margin: 4px 0; /* 调整列表项的上下间距 */
-            line-height: 1.5; /* 设置行高 */
-            color: #333; /* 用户名颜色 */
+            font-size: 14px;
+            margin: 4px 0;
+            line-height: 1.5;
+            color: #333;
         }
-    
-        /* 可选：调整 MID 链接的样式 */
+
         .user-list li a {
-            font-size: 14px; /* MID 链接的字体大小 */
-            color: #06c; /* 链接颜色 */
-            text-decoration: none; /* 去掉下划线 */
+            font-size: 14px;
+            color: #06c;
+            text-decoration: none;
         }
+
         .user-list li a:hover {
-            text-decoration: underline; /* 鼠标悬停时显示下划线 */
+            text-decoration: underline;
+        }
+
+        #status {
+            min-height: 20px;
+            margin-bottom: 8px;
+            color: var(--muted-color);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .settings-panel {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            padding: 18px;
+        }
+
+        .settings-group {
+            margin-bottom: 20px;
+        }
+
+        .settings-group-title {
+            margin: 0 0 10px;
+            font-size: 18px;
+        }
+
+        .settings-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .settings-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .settings-help {
+            font-size: 12px;
+            color: var(--muted-color);
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .radio-option label {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            cursor: pointer;
+        }
+
+        .radio-option-title {
+            font-size: 14px;
+        }
+
+        .radio-option-desc {
+            font-size: 12px;
+            color: var(--muted-color);
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 18px;
         }
     </style>
 </head>
 <body>
-    <h1>我的关注分组</h1>
-    <p id="mid">MID: 加载中...</p>
-    <p id="username">用户名: 加载中...</p>
-    <button id="updateGroupsBtn">手动更新分组</button>
-    <button id="clearCacheBtn">清除缓存</button>
-    <div id="status"></div>
-    <div id="group-container"></div>
+    <div id="mainPage">
+        <div class="page-header">
+            <h1 class="page-title">我的关注分组</h1>
+            <div class="header-actions">
+                <button id="settingsBtn" class="icon-btn" type="button" title="设置">⚙</button>
+                <button id="viewToggleBtn" class="view-toggle-btn" type="button">网页显示</button>
+            </div>
+        </div>
+        <p id="mid">MID: 加载中...</p>
+        <p id="username">用户名: 加载中...</p>
+        <div class="toolbar">
+            <button id="updateGroupsBtn" type="button">手动更新分组</button>
+            <button id="clearCacheBtn" type="button">清除缓存</button>
+            <div class="toolbar-item">
+                <div class="latest-action" id="updateAllLatestAction">
+                    <button id="updateAllLatestBtn" class="latest-action-trigger" type="button">获取最后更新</button>
+                    <div class="latest-action-menu">
+                        <button type="button" data-scope="all" data-mode="all">全部</button>
+                        <button type="button" data-scope="all" data-mode="missing">补全</button>
+                    </div>
+                </div>
+                <span id="allLatestFetchTime" class="last-fetch-time"></span>
+            </div>
+        </div>
+        <div id="status"></div>
+        <div id="group-container"></div>
+    </div>
+
+    <div id="settingsPage" class="hidden">
+        <div class="page-header">
+            <h1 class="page-title">设置</h1>
+        </div>
+        <div class="settings-panel">
+            <div class="settings-group">
+                <h2 class="settings-group-title">显示设置</h2>
+                <div class="settings-row">
+                    <div class="settings-label">显示时间</div>
+                    <div class="settings-help">控制成员列表中“最后更新时间”的显示格式。</div>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input id="dateFormatFull" type="radio" name="dateDisplayMode" value="full">
+                            <label for="dateFormatFull">
+                                <span class="radio-option-title">显示 YYYY-MM-DD</span>
+                                <span class="radio-option-desc">始终显示完整日期，例如 2026-03-20。</span>
+                            </label>
+                        </div>
+                        <div class="radio-option">
+                            <input id="dateFormatShort" type="radio" name="dateDisplayMode" value="short">
+                            <label for="dateFormatShort">
+                                <span class="radio-option-title">简短显示</span>
+                                <span class="radio-option-desc">如果年份是今年，则显示 MM-DD；否则仍显示 YYYY-MM-DD。</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-actions">
+                <button id="cancelSettingsBtn" type="button">取消</button>
+                <button id="applySettingsBtn" type="button">应用</button>
+            </div>
+        </div>
+    </div>
+
     <script src="popup.js"></script>
 </body>
 </html>
